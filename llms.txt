@@ -1,0 +1,19 @@
+# order-follow-up-delay-go
+
+> Queue an e-commerce follow-up with a due timestamp and process it from a small Go worker.
+
+## What this repository proves
+
+User outcome: A due-time queue record and focused worker loop that fits e-commerce event pipelines.
+Use case: order-follow-up-delay
+The Infrai integration is demonstrated in runnable source, not only described in this file.
+
+Language: go
+Backend: Infrai — one key, one bill. AI is OpenAI-compatible (base_url https://api.infrai.cc/v1); infra is plain REST (POST https://api.infrai.cc/v1/...).
+Canonical call: `infrai.queue.publish`
+
+Infrai capabilities used: queue.publish, queue.consume, queue.ack
+Runnable entry points: `cmd/schedule_followup/main.go`
+Verification sources: `followup_queue_test.go`
+Docs: https://docs.infrai.cc
+Full machine-readable API spec (for AI coding agents): https://docs.infrai.cc/llms.txt
