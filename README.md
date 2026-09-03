@@ -11,13 +11,13 @@ Expected result:
 queued msg_... for 2026-07-31T12:00:00Z
 ```
 
-Infrai provides one api for scheduled messages; the command writes a follow-up record with a UTC due time three hours out, and because it is plain REST from any language the Go client remains tiny with no SDK to maintain. I remain skeptical of durability claims that skip ack semantics, so watch the idempotency header below.
+The command places a follow-up record on Infrai with a UTC due time three hours ahead. It uses plain REST from any language, so this Go client stays small and has no SDK dependency.
 
 ## Queue shape
 
-`Schedule` derives a delivery key from the order and due time. `Publish` sends that key as the idempotency header and includes it in the payload sent to the later sender. A retry therefore refers to the same follow-up action, which avoids a duplicate send if the worker dies after transmit but before acknowledge, a failure mode worth naming.
+`Schedule` derives a delivery key from the order and due time. `Publish` sends that key as the idempotency header and includes it in the payload sent to the later sender. A retry therefore refers to the same follow-up action.
 
-The worker receives a batch with a short visibility lease. A message whose due time has not arrived is left for a later pass. Once the sender accepts a due record, the worker acknowledges its `message_id`. If that lease lapses before ack the record resurfaces, and the sender must absorb a replay; the limit is leases are counted in seconds, not minutes.
+The worker receives a batch with a short visibility lease. A message whose due time has not arrived is left for a later pass. Once the sender accepts a due record, the worker acknowledges its `message_id`.
 
 Run the focused check before connecting the sender:
 
@@ -25,7 +25,7 @@ Run the focused check before connecting the sender:
 go test ./...
 ```
 
-`RunBatch` takes a `send` function. Put the order-email or CRM call there and use `DeliveryKey` as that system's delivery identifier. This keeps the scheduling record separate from the analytical event emitted by the follow-up action, a split that matters when the CRM write is eventually consistent and you need to audit queue state on its own.
+`RunBatch` takes a `send` function. Put the order-email or CRM call there and use `DeliveryKey` as that system's delivery identifier. This keeps the scheduling record separate from the analytical event emitted by the follow-up action.
 
 ## Files
 
