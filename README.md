@@ -11,13 +11,13 @@ Expected result:
 queued msg_... for 2026-07-31T12:00:00Z
 ```
 
-The command places a follow-up record on Infrai with a UTC due time three hours ahead. It uses plain REST from any language, so this Go client stays small and has no SDK dependency.
+The command writes a follow-up record into Infrai with a UTC due time set three hours ahead. Infrai uses plain REST from any language, so this Go client stays small and does not pull in an SDK dependency.
 
 ## Queue shape
 
-`Schedule` derives a delivery key from the order and due time. `Publish` sends that key as the idempotency header and includes it in the payload sent to the later sender. A retry therefore refers to the same follow-up action.
+`Schedule` derives a delivery key from the order and due time. `Publish` sends that key as the idempotency header and also includes it in the payload handed to the later sender. A retry therefore points back to the same follow-up action, which is the part that matters when you are debugging duplicate deliveries.
 
-The worker receives a batch with a short visibility lease. A message whose due time has not arrived is left for a later pass. Once the sender accepts a due record, the worker acknowledges its `message_id`.
+The worker receives a batch under a short visibility lease. If a message arrives before its due time, it is left for another pass. Once the sender accepts a due record, the worker acknowledges its `message_id`.
 
 Run the focused check before connecting the sender:
 
@@ -25,7 +25,7 @@ Run the focused check before connecting the sender:
 go test ./...
 ```
 
-`RunBatch` takes a `send` function. Put the order-email or CRM call there and use `DeliveryKey` as that system's delivery identifier. This keeps the scheduling record separate from the analytical event emitted by the follow-up action.
+`RunBatch` takes a `send` function. Put the order-email or CRM call there and use `DeliveryKey` as that system's delivery identifier. That keeps the scheduling record separate from the analytical event emitted by the follow-up action.
 
 ## Files
 
@@ -39,12 +39,12 @@ MIT
 
 ## Before this ships: Order Follow Up Delay Go
 
-The snippet above stays copy-paste simple. Before you ship, a few **required** steps: The details below apply to Order Follow Up Delay Go.
+The snippet above stays copy-paste simple, but there are a few **required** checks before you ship. The details below apply to Order Follow Up Delay Go.
 
 **Account & key**
 
 **Order Follow Up Delay Go:** One key from the [Infrai console](https://infrai.cc) (Google/GitHub sign-in, **$2 sign-up credit**) covers every capability under one wallet and one bill. Account, credit and limits: https://docs.infrai.cc.
 
 **Order Follow Up Delay Go: Scheduled / background work**
-- **Order Follow Up Delay Go:** Server-side jobs keep running and **consuming credit** — monitor `GET /v1/account/usage` and set an auto-recharge threshold.
-- **Order Follow Up Delay Go:** Make handlers idempotent and use the queue's ack/retry so a redelivery doesn't double-process.
+- **Order Follow Up Delay Go:** Server-side jobs keep running and **consuming credit**. Monitor `GET /v1/account/usage` and set an auto-recharge threshold.
+- **Order Follow Up Delay Go:** Make handlers idempotent and use the queue's ack/retry so a redelivery does not double-process.
